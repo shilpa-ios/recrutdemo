@@ -40,15 +40,19 @@ class ThingsTableViewControler: UITableViewController, Transition {
         if cell == nil {
             cell = ThingCell()
         }
-        viewModel.bindModelWithView(cell: cell!, at: indexPath)
-        
         let thingModel = viewModel.thing(for: indexPath)
+        
         cell?.update(withText: thingModel.name)
-        cell?.update(withLikeValue: thingModel.like)
+        thingModel.isLiked.bind({
+           isLiked in
+            cell?.update(withLikeValue: isLiked)
+        })
         
         if let urlString = thingModel.image {
             viewModel.imageProvider.imageAsync(from: urlString, completion: { (image, imageUrl) in
-                cell?.updateThingImage(image)
+                DispatchQueue.main.async {
+                    cell?.updateThingImage(image)
+                }
             })
         }
         
@@ -62,10 +66,10 @@ class ThingsTableViewControler: UITableViewController, Transition {
         pushDetailsViewController(thingModel)
     }
     
-    func pushDetailsViewController(_ thingModel: ThingModel) {
+    func pushDetailsViewController(_ thingModel: ThingCellViewModel) {
         
         let detailsViewController = ThingDetailsViewController()
-        detailsViewController.thingModel = thingModel
+        detailsViewController.thingViewModel = thingModel
         detailsViewController.imageProvider = viewModel.imageProvider
         detailsViewController.delegate = self
         let navigationContorller = UINavigationController(rootViewController: detailsViewController)
@@ -75,19 +79,17 @@ class ThingsTableViewControler: UITableViewController, Transition {
 
 extension ThingsTableViewControler: ThingDetailsDelegate {
 
-    func thingDetails(viewController: ThingDetailsViewController, didLike thingModel: inout ThingModel) {
-        
-        thingModel.setLike(value: true)
+    func thingDetails(viewController: ThingDetailsViewController, didLike thingModel: inout ThingCellViewModel) {
+        thingModel.isLiked.value = true
         popViewController(viewController, animated: true)
     }
     
-    func thingDetails(viewController: ThingDetailsViewController, didDislike thingModel: inout ThingModel) {
-        
-        thingModel.setLike(value: false)
+    func thingDetails(viewController: ThingDetailsViewController, didDislike thingModel: inout ThingCellViewModel) {
+        thingModel.isLiked.value = false
         popViewController(viewController, animated: true)
     }
     
-    func thingDetails(viewController: ThingDetailsViewController, willDismiss thingModel: inout ThingModel) {
+    func thingDetails(viewController: ThingDetailsViewController, willDismiss thingModel: inout ThingCellViewModel) {
         popViewController(viewController, animated: true)
     }
 }
