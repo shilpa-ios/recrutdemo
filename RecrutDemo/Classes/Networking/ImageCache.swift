@@ -7,7 +7,10 @@ class ImageCache {
     let cachesPath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     var cacheSize = 70
     
-    private var localCache = Dictionary<String, UIImage>()
+    private var localCache = NSCache<NSString, UIImage>()
+    
+    
+        
     private func moveImage(from: URL, to destinationURL: URL) -> String? {
         
         do {
@@ -43,7 +46,7 @@ class ImageCache {
             }
         }
     }
-    
+ //SS: Duplicate method.
     func imageName(for url: URL) -> String {
     
         var imageName = url.lastPathComponent
@@ -65,17 +68,26 @@ class ImageCache {
     }
     
     func storeImageLocally(image: UIImage, key: String) {
-        localCache[key] = image//store in cache
+    
+       // localCache[key] = image//store in cache
     }
     
-    func storeImageInCache(from location: URL, imageName: String) -> UIImage? {
+//    SS: Why this has to return image? This method is intended to save the image in the cache.
+    func store(image: UIImage, imageName: String) {
         
-        let destination = destinationURL(for: imageName)
-        guard let imagePath = moveImage(from: location, to: destination) else {
-            return nil
-        }
-        return UIImage(contentsOfFile: imagePath)
+        self.localCache.setObject(image, forKey: imageName as NSString)
     }
+    
+    func image(for url : URL) -> UIImage? {
+        let imageName = self.imageName(for: url)
+        return self.localCache.object(forKey: imageName as NSString)
+    }
+    
+    func image(for imageName : String) -> UIImage? {
+        return self.localCache.object(forKey: imageName as NSString)
+    }
+    
+     
 }
 
 
